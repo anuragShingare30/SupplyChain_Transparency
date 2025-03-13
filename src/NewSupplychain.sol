@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.22;
 
-import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import {ERC721} from "lib/openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
+import {Ownable} from "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
+import {AccessControl} from "lib/openzeppelin-contracts/contracts/access/AccessControl.sol";
+import {MerkleProof} from "lib/openzeppelin-contracts/contracts/utils/cryptography/MerkleProof.sol";
 import {EIP712} from "lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol";
 import {ECDSA} from "lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 
@@ -23,6 +23,7 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
 
     // error
     error NewSupplyChain_InvalidProof();
+    error NewSupplyChain_InvalidSIgnature();
     error NewSupplyChain_ZeroAddressNotAllowed();
     error NewSupplyChain_AlreadyPresent_CheckForMaliciousActivity();
 
@@ -80,6 +81,13 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
         tokenId = 0;
     }
 
+    /**
+        @notice createBatch function
+        @notice This function will be called by manufacturer only!!!
+        @notice Function checks for valid address present in our tree
+        @dev The addresses present in merkle tree are eligible to create medicine batch
+        @dev If calling address is eligible -> mints new medicine batch -> Updates the batch struct
+     */
     function createBatch(
         bytes32 _merkleRoot,
         string memory _expiryDate,
@@ -93,9 +101,11 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
         
         // validated the user using merkle root
         // Here, for frontend we will hardcode the merkle proofs for specific address 
+        // Here, caller will not provide the proof
+        // Protocol will fetch the proof for caller off-chain -> If no proof exist zero address will be returned
         bytes32 leaf = keccak256(bytes.concat(keccak256((abi.encode(msg.sender)))));
         if(!MerkleProof.verify(_merkleProof, _merkleRoot, leaf)){
-            revert NewSupplyChain__InvalidProof();
+            revert NewSupplyChain_InvalidProof();
         }
 
         _safeMint(msg.sender, tokenId);
@@ -121,13 +131,18 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
     }
 
 
-    // We can use Ether.js or Web3.js to generate the signature
-    // We can use lower-level calls and functions to split the signature in v,r,s
-    // Here, we will implement the pre-authorization for transfer
-    // Manufacturer will sign the message off-chain and verified distributor will verify the signature
-    // Protocol will check for verification -> If correct ownership will be transfered to the distributor
-    // Gas-less transaction -> Pre-authorization
-    // Message can contains either the signer address or the struct of batch info!!!!
+    /**
+        @notice toDistributor function
+        @notice Function performs an pre-authorization to verify the transfership to trusted and valid distributor!!!
+        @notice This function will be called by distributor and need to provide the signature for verification
+        @notice The valid manufacturer will generate the signature off-chain
+        @notice Protocol will verify the signature on-chain provided by the distributor. If elgible the ownership will be transfered to distributor
+
+        @dev Gas-less transaction -> Pre-authorization
+        @dev Message can contains either the signer address or the struct of batch info!!!!
+        @dev We can use Ether.js or Web3.js to generate the signature
+        @dev We can use lower-level calls and functions to split the signature in v,r,s
+     */
     function toDistributor(
         address _signer, // manufacturer address
         bytes memory _signature,
@@ -138,7 +153,7 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
         // verify the signature
         bytes32 digest = _getMessageHash(_signer);
         if(!_isVaildSignature(_signer, digest, _signature)){
-            revert NewSupplyChain_InvalidProof();
+            revert NewSupplyChain_InvalidSIgnature();
         }
 
         // update the batch info
