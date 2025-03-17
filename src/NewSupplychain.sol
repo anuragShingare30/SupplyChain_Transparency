@@ -53,11 +53,11 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
 
     // state variables
     uint256 tokenId;
-    bytes32[] private _merkleProof = [
-        bytes32(0x59856afbe8900ffcd32b8de545b9b5c0128ecda7289ff898b2ea8dc62b3f9a07),
-        bytes32(0xf6949786c44ce4b9916e434fcdb9ff65f5c1c50d4fd00c0c34ce124acb64a922),
-        bytes32(0x079d80974de7a6a2b5658681d9914e122e80917d90056c1f9d6b3ad021733efc)
-    ];
+    // bytes32[] private _merkleProof = [
+    //     bytes32(0x59856afbe8900ffcd32b8de545b9b5c0128ecda7289ff898b2ea8dc62b3f9a07),
+    //     bytes32(0xf6949786c44ce4b9916e434fcdb9ff65f5c1c50d4fd00c0c34ce124acb64a922),
+    //     bytes32(0x079d80974de7a6a2b5658681d9914e122e80917d90056c1f9d6b3ad021733efc)
+    // ];
 
 
     // events
@@ -90,6 +90,7 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
      */
     function createBatch(
         bytes32 _merkleRoot,
+        bytes32 _merkleProof,
         string memory _expiryDate,
         string memory _medName,
         string memory _manufacturerName
@@ -172,14 +173,14 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
         address _signer,
         bytes32 _digest,
         bytes memory _signature
-    ) internal returns(bool){
+    ) private returns(bool){
         (address actualSigner,,) = ECDSA.tryRecover(_digest, _signature);
         return (actualSigner == _signer);
     }
 
     
     // GETTER FUNCTION
-    function _getMessageHash(address _signer) internal pure returns(bytes32){
+    function _getMessageHash(address _signer) private pure returns(bytes32){
         return (
             keccak256(
                 abi.encode(

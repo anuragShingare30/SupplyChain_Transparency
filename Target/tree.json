@@ -1,1 +1,22 @@
-{"format":"standard-v1","leafEncoding":["address"],"tree":["0xd236e5c3bffa45c2373ae9ad1c5e66728a24f0eac87aa457f08153425ad2ac01","0xfa80f8ea125da0b7c14abf2015d0d9c1f3a9a9f16e88db1b262d3d759be835a2","0x079d80974de7a6a2b5658681d9914e122e80917d90056c1f9d6b3ad021733efc","0x85c99f9ed408529a8e32d19f1606c0783273722f7a42ae71ef5f7345b0e62870","0xf6949786c44ce4b9916e434fcdb9ff65f5c1c50d4fd00c0c34ce124acb64a922","0xd791b4384f11048b2330e9ec924a5c80226526b5e9d7f65537637981af4d404f","0xcaf0de3438122286ae0e65e28710cfc2e4eb37b9ed93dbaf12a49d465387383c","0x59856afbe8900ffcd32b8de545b9b5c0128ecda7289ff898b2ea8dc62b3f9a07","0x24da68c5697e2b39240db86159eb0aea630eef50919653bc16409e95a183b6c6"],"values":[{"value":["0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D"],"treeIndex":4},{"value":["0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"],"treeIndex":5},{"value":["0x5B38Da6a701c568545dCfcB03FcB875f56beddC4"],"treeIndex":8},{"value":["0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2"],"treeIndex":7},{"value":["0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db"],"treeIndex":6}]}
+{
+  "format": "standard-v1",
+  "leafEncoding": ["address"],
+  "tree": [
+    "0xd236e5c3bffa45c2373ae9ad1c5e66728a24f0eac87aa457f08153425ad2ac01",
+    "0xfa80f8ea125da0b7c14abf2015d0d9c1f3a9a9f16e88db1b262d3d759be835a2",
+    "0x079d80974de7a6a2b5658681d9914e122e80917d90056c1f9d6b3ad021733efc",
+    "0x85c99f9ed408529a8e32d19f1606c0783273722f7a42ae71ef5f7345b0e62870",
+    "0xf6949786c44ce4b9916e434fcdb9ff65f5c1c50d4fd00c0c34ce124acb64a922",
+    "0xd791b4384f11048b2330e9ec924a5c80226526b5e9d7f65537637981af4d404f",
+    "0xcaf0de3438122286ae0e65e28710cfc2e4eb37b9ed93dbaf12a49d465387383c",
+    "0x59856afbe8900ffcd32b8de545b9b5c0128ecda7289ff898b2ea8dc62b3f9a07",
+    "0x24da68c5697e2b39240db86159eb0aea630eef50919653bc16409e95a183b6c6"
+  ],
+  "values": [
+    { "value": ["0x6CA6d1e2D5347Bfab1d91e883F1915560e09129D"], "treeIndex": 4 },
+    { "value": ["0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"], "treeIndex": 5 },
+    { "value": ["0x5B38Da6a701c568545dCfcB03FcB875f56beddC4"], "treeIndex": 8 },
+    { "value": ["0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2"], "treeIndex": 7 },
+    { "value": ["0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db"], "treeIndex": 6 }
+  ]
+}
