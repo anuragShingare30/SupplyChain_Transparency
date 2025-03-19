@@ -51,10 +51,6 @@ contract SupplychainTest is Test {
     }
 
     // VERIFYING THE SIGNATURE AND TRANSFERRING OWNERSHIP
-    function getSignature(address _user) public view returns(uint8,bytes32,bytes32) {
-        bytes32 digest = newSupplychain._getMessageHash(_user);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(userPK, digest);
-    }
     function test_verifySigNTransferOwnerShip() public {
         // create batch
         vm.startPrank(user);
@@ -71,8 +67,9 @@ contract SupplychainTest is Test {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(userPK, digest);
 
         // VERIFY THE SIGNATURE
+        string memory _distName = "Anurag";
         vm.startPrank(DIST);
-        newSupplychain.toDistributor(user,v,r,s,0,"Anurag");
+        newSupplychain.toDistributor(user,v,r,s,0,_distName);
         vm.stopPrank();
 
         // TRANSFER THE OWNERSHIP -> AS CONTRACT AS APPROVAL TO TRANSFER OWNERSHIP
@@ -81,6 +78,7 @@ contract SupplychainTest is Test {
         vm.stopPrank();
 
         assert(newSupplychain.ownerOf(0) == DIST);
+        console.log(string(abi.encodePacked(newSupplychain.getDistName(0))));
     }
 
 

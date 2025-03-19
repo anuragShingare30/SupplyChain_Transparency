@@ -24,7 +24,9 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
 
     // error
     error NewSupplyChain_InvalidProof();
-    error NewSupplyChain_InvalidSIgnature();
+    error NewSupplyChain_InvalidSIgnature_ByDistributor();
+    error NewSupplyChain_InvalidSIgnature_ByRetailer();
+    error NewSupplyChain_InvalidSIgnature_ByPharmacists();
     error NewSupplyChain_ZeroAddressNotAllowed();
     error NewSupplyChain_AlreadyPresent_CheckForMaliciousActivity();
 
@@ -63,7 +65,9 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
 
     // events
     event NewSupplyChain__ValidProof(address _user);
-    event NewSupplyChain__ValidSignature__ManufacturerToDistributor(address _signer,address _distributor);
+    event NewSupplyChain__ValidSignature__ManufacturerToDistributor(address _manufacturer,address _distributor);
+    event NewSupplyChain__ValidSignature__DistributorToWholeSaler(address _distributor,address _wholeSaler);
+    event NewSupplyChain__ValidSignature__WholeSalerToPharmacists(address _wholeSaler, address _pharmacists);
 
     // modifiers
     modifier zeroAddressNotAllowed(address _to){
@@ -161,17 +165,63 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
         // verify the signature
         bytes32 digest = _getMessageHash(_signer);
         if(!_isVaildSignature(_signer, digest, _v,_r,_s)){
-            revert NewSupplyChain_InvalidSIgnature();
+            revert NewSupplyChain_InvalidSIgnature_ByDistributor();
         }
 
         // update the batch info
-        s_createBatch[_tokenId].distributorName = keccak256(abi.encodePacked(_distributorName));
+        s_createBatch[_tokenId].distributorName = bytes32(abi.encodePacked(_distributorName));
         s_createBatch[_tokenId].status = batchStatus.Distributor;
 
         emit NewSupplyChain__ValidSignature__ManufacturerToDistributor(_signer,msg.sender); 
 
         // transfer ownership
         // safeTransferFrom(address(this), msg.sender, _tokenId);
+    }
+
+
+    function toWholesaler(
+        address _signer, // distributor address
+        // bytes memory _signature,
+        uint8 _v,
+	    bytes32 _r,
+	    bytes32 _s,
+        uint256 _tokenId,
+        string memory _wholeSalerName
+    ) public {
+                // verify the signature
+        bytes32 digest = _getMessageHash(_signer);
+        if(!_isVaildSignature(_signer, digest, _v,_r,_s)){
+            revert NewSupplyChain_InvalidSIgnature_ByWholesaler();
+        }
+
+        // update the batch info
+        s_createBatch[_tokenId].wholeSalerName = bytes32(abi.encodePacked(_wholeSalerName));
+        s_createBatch[_tokenId].status = batchStatus.WholeSaler;
+
+        emit NewSupplyChain__ValidSignature__DistributorToWholeSaler(_signer,msg.sender); 
+    }
+
+
+    function toPharmacists(
+        address _signer, // distributor address
+        // bytes memory _signature,
+        uint8 _v,
+	    bytes32 _r,
+	    bytes32 _s,
+        uint256 _tokenId,
+        string memory _pharmacistsName
+    ) public {
+                // verify the signature
+        bytes32 digest = _getMessageHash(_signer);
+        if(!_isVaildSignature(_signer, digest, _v,_r,_s)){
+            revert NewSupplyChain_InvalidSIgnature_ByPharmacists();
+        }
+
+        // update the batch info
+        s_createBatch[_tokenId].wholeSalerName = bytes32(abi.encodePacked(_wholeSalerName));
+        s_createBatch[_tokenId].status = batchStatus.WholeSaler;
+
+        emit NewSupplyChain__ValidSignature__WholeSalerToPharmacists(_signer,msg.sender); 
     }
 
 
@@ -206,5 +256,9 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
 
     function getSomeDetails(uint256 _tokenId) public view returns(bytes32,bytes32){
         return (s_createBatch[_tokenId].medName,s_createBatch[_tokenId].manufacturerName);
+    }
+    function getDistName(uint256 _tokenId) public view returns(string memory){
+        bytes32 _distName = s_createBatch[_tokenId].distributorName;
+        return string(abi.encodePacked(_distName));
     }
 }
