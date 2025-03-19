@@ -2,9 +2,10 @@
 pragma solidity ^0.8.22;
 
 import {ERC721} from "lib/openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
+import {IERC721} from "lib/openzeppelin-contracts/contracts/interfaces/IERC721.sol";
 import {Ownable} from "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 import {AccessControl} from "lib/openzeppelin-contracts/contracts/access/AccessControl.sol";
-import {MerkleProof} from "lib/openzeppelin-contracts/contracts/utils/cryptography/MerkleProof.sol";
+import "lib/openzeppelin-contracts/contracts/utils/cryptography/MerkleProof.sol";
 import {EIP712} from "lib/openzeppelin-contracts/contracts/utils/cryptography/EIP712.sol";
 import {ECDSA} from "lib/openzeppelin-contracts/contracts/utils/cryptography/ECDSA.sol";
 
@@ -90,15 +91,15 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
      */
     function createBatch(
         bytes32 _merkleRoot,
-        bytes32 _merkleProof,
+        bytes32[] memory _merkleProof,
         string memory _expiryDate,
         string memory _medName,
         string memory _manufacturerName
     ) public zeroAddressNotAllowed(msg.sender){
 
-        if((s_createBatch[tokenId].manufacturerName).length != 0){
-            revert NewSupplyChain_AlreadyPresent_CheckForMaliciousActivity();
-        }
+        // if((s_createBatch[tokenId].manufacturerName).length != 0){
+        //     revert NewSupplyChain_AlreadyPresent_CheckForMaliciousActivity();
+        // }
         
         // validated the user using merkle root
         // Here, for frontend we will hardcode the merkle proofs for specific address 
@@ -128,6 +129,9 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
 
         emit NewSupplyChain__ValidProof(msg.sender);
 
+        // approve the contract
+        setApprovalForAll(address(this), true);
+
         tokenId++;
     }
 
@@ -146,14 +150,17 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
      */
     function toDistributor(
         address _signer, // manufacturer address
-        bytes memory _signature,
+        // bytes memory _signature,
+        uint8 _v,
+	    bytes32 _r,
+	    bytes32 _s,
         uint256 _tokenId,
         string memory _distributorName
     ) public {
 
         // verify the signature
         bytes32 digest = _getMessageHash(_signer);
-        if(!_isVaildSignature(_signer, digest, _signature)){
+        if(!_isVaildSignature(_signer, digest, _v,_r,_s)){
             revert NewSupplyChain_InvalidSIgnature();
         }
 
@@ -164,7 +171,7 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
         emit NewSupplyChain__ValidSignature__ManufacturerToDistributor(_signer,msg.sender); 
 
         // transfer ownership
-        safeTransferFrom(_signer, msg.sender, _tokenId);
+        // safeTransferFrom(address(this), msg.sender, _tokenId);
     }
 
 
@@ -172,15 +179,18 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
     function _isVaildSignature(
         address _signer,
         bytes32 _digest,
-        bytes memory _signature
-    ) private returns(bool){
-        (address actualSigner,,) = ECDSA.tryRecover(_digest, _signature);
+        // bytes memory _signature
+        uint8 _v,
+	    bytes32 _r,
+	    bytes32 _s
+    ) internal returns(bool){
+        (address actualSigner,,) = ECDSA.tryRecover(_digest, _v,_r,_s); 
         return (actualSigner == _signer);
     }
 
     
     // GETTER FUNCTION
-    function _getMessageHash(address _signer) private pure returns(bytes32){
+    function _getMessageHash(address _signer) public pure returns(bytes32){
         return (
             keccak256(
                 abi.encode(
@@ -189,4 +199,12 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
             )
         );
     } 
+
+    function getBatchInfo(uint256 _tokenId) public view returns(batchInfo memory){
+        return s_createBatch[_tokenId];
+    }
+
+    function getSomeDetails(uint256 _tokenId) public view returns(bytes32,bytes32){
+        return (s_createBatch[_tokenId].medName,s_createBatch[_tokenId].manufacturerName);
+    }
 }

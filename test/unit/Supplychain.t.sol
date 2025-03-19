@@ -2,8 +2,9 @@
 pragma solidity ^0.8.22;
 
 import {Test,Vm} from "lib/forge-std/src/Test.sol";
-import {console} from "lib/forge-std/src/console.sol";
+import "lib/forge-std/src/console.sol";
 import {NewSupplyChain} from "src/NewSupplychain.sol";
+import {IERC721} from "lib/openzeppelin-contracts/contracts/interfaces/IERC721.sol";
 
 /**
     @notice SupplychainTest test contract
@@ -31,15 +32,55 @@ contract SupplychainTest is Test {
         newSupplychain = new NewSupplyChain();
 
         (user,userPK) = makeAddrAndKey("user");
+        DIST = makeAddr("DIST");
     }
 
+    // CREATING BATCH AND VERIFYING VALID USER/MANUFACTURER CREATED BATCH
     function test_createBatchByValidUser() public {
         vm.startPrank(user);
         string memory _expiryDate = "12/12/12";
         string memory _medName = "Para123";
         string memory _manfName = "Rohit";
         newSupplychain.createBatch(merkleRoot,merkleProof,_expiryDate,_medName,_manfName);
+
+        (bytes32 medName, bytes32 manuName) = newSupplychain.getSomeDetails(0);
         vm.stopPrank();
+
+        console.log(string(abi.encodePacked(medName)));
+        console.log(string(abi.encodePacked(manuName)));
+    }
+
+    // VERIFYING THE SIGNATURE AND TRANSFERRING OWNERSHIP
+    function getSignature(address _user) public view returns(uint8,bytes32,bytes32) {
+        bytes32 digest = newSupplychain._getMessageHash(_user);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(userPK, digest);
+    }
+    function test_verifySigNTransferOwnerShip() public {
+        // create batch
+        vm.startPrank(user);
+        string memory _expiryDate = "12/12/12";
+        string memory _medName = "Para123";
+        string memory _manfName = "Rohit";
+        newSupplychain.createBatch(merkleRoot,merkleProof,_expiryDate,_medName,_manfName);
+        vm.stopPrank();
+
+        // pre-authentication to generate signature
+        // bytes memory sig = abi.encodePacked(r, s, v);
+        // console.logBytes(sig);
+        bytes32 digest = newSupplychain._getMessageHash(user);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(userPK, digest);
+
+        // VERIFY THE SIGNATURE
+        vm.startPrank(DIST);
+        newSupplychain.toDistributor(user,v,r,s,0,"Anurag");
+        vm.stopPrank();
+
+        // TRANSFER THE OWNERSHIP -> AS CONTRACT AS APPROVAL TO TRANSFER OWNERSHIP
+        vm.startPrank(user);
+        IERC721(newSupplychain).safeTransferFrom(user, DIST, 0);
+        vm.stopPrank();
+
+        assert(newSupplychain.ownerOf(0) == DIST);
     }
 
 
