@@ -22,13 +22,15 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
     using ECDSA for bytes32;
 
 
-    // error
+   // error
     error NewSupplyChain_InvalidProof();
     error NewSupplyChain_InvalidSIgnature_ByDistributor();
     error NewSupplyChain_InvalidSIgnature_ByRetailer();
+    error NewSupplyChain_InvalidSIgnature_ByWholesaler();
     error NewSupplyChain_InvalidSIgnature_ByPharmacists();
     error NewSupplyChain_ZeroAddressNotAllowed();
     error NewSupplyChain_AlreadyPresent_CheckForMaliciousActivity();
+
 
     // enum
     enum batchStatus { 
@@ -214,12 +216,12 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
                 // verify the signature
         bytes32 digest = _getMessageHash(_signer);
         if(!_isVaildSignature(_signer, digest, _v,_r,_s)){
-            revert NewSupplyChain_InvalidSIgnature_ByPharmacists();
+            revert NewSupplyChain_InvalidSIgnature_ByPharmacists(); 
         }
 
         // update the batch info
-        s_createBatch[_tokenId].wholeSalerName = bytes32(abi.encodePacked(_wholeSalerName));
-        s_createBatch[_tokenId].status = batchStatus.WholeSaler;
+        s_createBatch[_tokenId].wholeSalerName = bytes32(abi.encodePacked(_pharmacistsName));
+        s_createBatch[_tokenId].status = batchStatus.Pharma;
 
         emit NewSupplyChain__ValidSignature__WholeSalerToPharmacists(_signer,msg.sender); 
     }
@@ -233,7 +235,7 @@ contract NewSupplyChain is ERC721,Ownable,EIP712 {
         uint8 _v,
 	    bytes32 _r,
 	    bytes32 _s
-    ) internal returns(bool){
+    ) internal pure returns(bool){
         (address actualSigner,,) = ECDSA.tryRecover(_digest, _v,_r,_s); 
         return (actualSigner == _signer);
     }
